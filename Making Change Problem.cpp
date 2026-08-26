@@ -3,20 +3,39 @@
 #include <algorithm>
 
 using namespace std;
+struct ChangeResult {
+    int minCoins;
+    int maxCoins;
+};
 
-int getMinCoins(const vector<int>& coins, int amount) {
-    vector<int> dp(amount + 1, amount + 1);
-    
-    dp[0] = 0;
+ChangeResult getMinAndMaxCoins(const vector<int>& coins, int amount) {
+    const int INF = amount + 1;
+
+    vector<int> dpMin(amount + 1, INF);
+    vector<int> dpMax(amount + 1, -1);
+
+    dpMin[0] = 0;
+    dpMax[0] = 0;
 
     for (int i = 1; i <= amount; i++) {
         for (int coin : coins) {
             if (i - coin >= 0) {
-                dp[i] = min(dp[i], dp[i - coin] + 1);
+                if (dpMin[i - coin] != INF) {
+                    dpMin[i] = min(dpMin[i], dpMin[i - coin] + 1);
+                }
+                
+                if (dpMax[i - coin] != -1) {
+                    dpMax[i] = max(dpMax[i], dpMax[i - coin] + 1);
+                }
             }
         }
     }
-    return (dp[amount] > amount) ? -1 : dp[amount];
+
+    ChangeResult result;
+    result.minCoins = (dpMin[amount] == INF) ? -1 : dpMin[amount];
+    result.maxCoins = dpMax[amount]; 
+
+    return result;
 }
 
 int main() {
@@ -42,12 +61,14 @@ int main() {
         return 1;
     }
 
-    int result = getMinCoins(coins, targetAmount);
+    ChangeResult result = getMinAndMaxCoins(coins, targetAmount);
 
-    if (result == -1) {
+    if (result.minCoins == -1) {
         cout << "\nIt is impossible to make change for " << targetAmount << " with the given denominations." << endl;
     } else {
-        cout << "\nThe minimum number of coins required to make change is: " << result << endl;
+        cout << "\n--- Results ---" << endl;
+        cout << "Minimum number of coins required: " << result.minCoins << endl;
+        cout << "Maximum number of coins required: " << result.maxCoins << endl;
     }
 
     return 0;
